@@ -5,6 +5,7 @@ import '../../features/connection/presentation/screens/connection_screen.dart';
 import '../../features/live_data/presentation/screens/dashboard_screen.dart';
 import '../../features/diagnostics/presentation/screens/diagnostics_screen.dart';
 import '../../features/trip/presentation/screens/trip_history_screen.dart';
+import '../../features/visualization/presentation/screens/visualization_screen.dart';
 
 final goRouterProvider = Provider<GoRouter>((ref) {
   return GoRouter(
@@ -29,6 +30,10 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/history',
         builder: (context, state) => const TripHistoryScreen(),
+      ),
+      GoRoute(
+        path: '/visualize',
+        builder: (context, state) => const VisualizationScreen(),
       ),
       GoRoute(
         path: '/settings',
