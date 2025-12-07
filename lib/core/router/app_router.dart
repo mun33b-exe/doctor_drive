@@ -9,11 +9,13 @@ import '../../features/visualization/presentation/screens/visualization_screen.d
 import '../../features/auth/presentation/screens/login_screen.dart';
 import '../../features/auth/presentation/screens/signup_screen.dart';
 import '../../features/auth/presentation/screens/user_profile_screen.dart';
+import '../../features/home/presentation/screens/home_screen.dart';
 
 final goRouterProvider = Provider<GoRouter>((ref) {
   return GoRouter(
-    initialLocation: '/connection',
+    initialLocation: '/',
     routes: [
+      GoRoute(path: '/', builder: (context, state) => const HomeScreen()),
       GoRoute(
         path: '/connection',
         builder: (context, state) => const ConnectionScreen(),

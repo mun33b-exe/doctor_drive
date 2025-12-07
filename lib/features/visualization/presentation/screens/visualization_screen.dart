@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_3d_controller/flutter_3d_controller.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../diagnostics/data/models/dtc_model.dart';
 import '../../../diagnostics/presentation/providers/dtc_providers.dart';
 import '../../data/services/fault_localization_service.dart';
 
@@ -18,40 +19,64 @@ class _VisualizationScreenState extends ConsumerState<VisualizationScreen> {
 
   String _statusMessage = 'Loading 3D Model...';
   bool _modelLoaded = false;
+  List<DtcModel> _dtcList = [];
 
   @override
   void initState() {
     super.initState();
     // Schedule initial focus attempt
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _autoZoomToFault();
       // Simulate load completion
       setState(() {
-        _modelLoaded = true;
-        _statusMessage = 'Interactive 3D View';
+         _modelLoaded = true;
+         _statusMessage = 'Interactive 3D View';
       });
+      _autoZoomToFault();
     });
   }
 
   Future<void> _autoZoomToFault() async {
-    final dtcs = await ref.read(storedDtcProvider.future);
+    List<DtcModel> dtcs = [];
+    try {
+      dtcs = await ref.read(storedDtcProvider.future);
+    } catch (e) {
+      // Not connected or error -> Use Demo Data
+      dtcs = [
+         const DtcModel(code: 'P0300', description: 'Random/Multiple Cylinder Misfire Detected', system: 'Powertrain', severity: 'High'),
+         const DtcModel(code: 'C0200', description: 'ABS Wheel Speed Sensor', system: 'Chassis', severity: 'Medium'),
+      ];
+      if (mounted) {
+        setState(() {
+          _statusMessage = 'Demo Mode: Simulating Faults';
+        });
+      }
+    }
+
+    if (mounted) {
+       setState(() {
+           _dtcList = dtcs;
+       });
+    }
+
     if (dtcs.isNotEmpty) {
       final firstFault = dtcs.first;
       final orbit = FaultLocalizationService.getCameraOrbitForDtc(firstFault);
       if (orbit != null) {
         _applyCameraOrbit(orbit);
-        setState(() {
-          _statusMessage =
-              'Focused on: ${FaultLocalizationService.getPartDescription(firstFault)}';
-        });
+        if (mounted) {
+             setState(() {
+                 // Keep the demo message if explicitly set above, else update
+                 if (!_statusMessage.startsWith('Demo')) {
+                     _statusMessage = 'Focused on: ${FaultLocalizationService.getPartDescription(firstFault)}';
+                 }
+            });
+        }
       }
     }
   }
 
   void _applyCameraOrbit(String orbitObj) {
     // orbitObj is likely "theta phi radius" e.g. "0deg 60deg 2m" or just numbers
-    // We need to parse this.
-    // DtcService returns strings with units.
     final parts = orbitObj.split(' ');
     if (parts.length >= 3) {
       final theta = double.tryParse(parts[0].replaceAll('deg', '')) ?? 0.0;
@@ -64,13 +89,7 @@ class _VisualizationScreenState extends ConsumerState<VisualizationScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final dtcsAsync = ref.watch(storedDtcProvider);
-
-    // Fallback URL if local asset missing (using a placeholder generic car if available, or just a cube for now)
-    // Ideally use 'assets/3d/car.glb'
-    // Since we don't know if user added it, we try to load it.
-    // If it fails, flutter_3d_controller might show error or blank.
-    // For this generic code, let's point to the asset.
+    // Fallback URL if local asset missing
     const modelSource = 'assets/3d/car.glb';
 
     return Scaffold(
@@ -96,9 +115,6 @@ class _VisualizationScreenState extends ConsumerState<VisualizationScreen> {
                 Flutter3DViewer(
                   src: modelSource,
                   controller: _controller,
-                  // onLoad/onError might not be supported in this version directly on widget
-                  // or names differ. Removing to fix build errors.
-                  // We will assume load is handled.
                 ),
                 if (!_modelLoaded)
                   const Center(child: CircularProgressIndicator()),
@@ -129,16 +145,13 @@ class _VisualizationScreenState extends ConsumerState<VisualizationScreen> {
           Container(
             height: 120,
             color: AppColors.surface,
-            child: dtcsAsync.when(
-              data: (dtcs) {
-                if (dtcs.isEmpty) {
-                  return const Center(child: Text('No Faults Detected'));
-                }
-                return ListView.builder(
+            child: _dtcList.isEmpty 
+              ? const Center(child: Text('No Faults Detected'))
+              : ListView.builder(
                   scrollDirection: Axis.horizontal,
-                  itemCount: dtcs.length,
+                  itemCount: _dtcList.length,
                   itemBuilder: (context, index) {
-                    final dtc = dtcs[index];
+                    final dtc = _dtcList[index];
                     return GestureDetector(
                       onTap: () {
                         final orbit =
@@ -181,11 +194,7 @@ class _VisualizationScreenState extends ConsumerState<VisualizationScreen> {
                       ),
                     );
                   },
-                );
-              },
-              loading: () => const SizedBox(),
-              error: (_, __) => const SizedBox(),
-            ),
+                ),
           ),
         ],
       ),
