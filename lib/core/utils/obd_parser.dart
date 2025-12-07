@@ -1,3 +1,5 @@
+import '../constants/obd_pids.dart';
+
 class ObdDataParser {
   /// Decodes standard OBD-II PID responses.
   ///
@@ -5,10 +7,12 @@ class ObdDataParser {
   /// Returns a double value or null if parsing fails.
   static double? parse(String response, String pid) {
     // Remove whitespace, nulls, and ELM327 prompt char '>'
-    final cleanResponse = response.replaceAll(RegExp(r'[\s>]+'), '').trim();
+    final cleanResponse = response
+        .replaceAll(RegExp(r'\s+'), '')
+        .replaceAll('>', '');
 
     // Check for "41xx" success prefix
-    if (!cleanResponse.startsWith('41${pid}')) {
+    if (!cleanResponse.startsWith('41$pid')) {
       return null; // Not a valid response for this PID or error
     }
 
@@ -25,22 +29,22 @@ class ObdDataParser {
       if (bytes.isEmpty) return null;
 
       switch (pid) {
-        case '0C': // RPM: ((A*256)+B)/4
+        case ObdPids.engineRpm: // 0C
           if (bytes.length < 2) return null;
           final a = bytes[0];
           final b = bytes[1];
           return ((a * 256.0) + b) / 4.0;
 
-        case '0D': // Speed: A km/h
-          if (bytes.length < 1) return null;
+        case ObdPids.vehicleSpeed: // 0D
+          if (bytes.isEmpty) return 0;
           return bytes[0].toDouble();
 
-        case '05': // Coolant Temp: A - 40
-          if (bytes.length < 1) return null;
+        case ObdPids.coolantTemp: // 05
+          if (bytes.isEmpty) return 0;
           return bytes[0].toDouble() - 40.0;
 
-        case '04': // Engine Load: A * 100 / 255
-          if (bytes.length < 1) return null;
+        case ObdPids.engineLoad: // 04
+          if (bytes.isEmpty) return 0;
           return (bytes[0] * 100.0) / 255.0;
 
         default:

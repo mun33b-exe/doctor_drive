@@ -50,6 +50,12 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
               context.push('/settings');
             },
           ),
+          IconButton(
+            icon: const Icon(Icons.person),
+            onPressed: () {
+              context.push('/profile');
+            },
+          ),
         ],
       ),
       body: Padding(
