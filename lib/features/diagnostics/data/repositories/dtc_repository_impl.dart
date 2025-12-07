@@ -55,7 +55,9 @@ class DtcRepositoryImpl implements DtcRepository {
     // I'll implement a simple matching: Send command, wait for first response that starts with "43".
 
     if (!_socketService.isConnected) {
-      throw Exception("Not connected to vehicle");
+      // Return empty instead of crashing when not connected.
+      // The UI should handle empty state or use Demo Mode if strictly needed.
+      return [];
     }
 
     try {
