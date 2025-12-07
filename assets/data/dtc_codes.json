@@ -1,0 +1,32 @@
+[
+  {
+    "code": "P0101",
+    "description": "Mass or Volume Air Flow Circuit Range/Performance Problem",
+    "system": "Powertrain",
+    "severity": "Medium"
+  },
+  {
+    "code": "P0300",
+    "description": "Random/Multiple Cylinder Misfire Detected",
+    "system": "Powertrain",
+    "severity": "High"
+  },
+  {
+    "code": "P0420",
+    "description": "Catalyst System Efficiency Below Threshold (Bank 1)",
+    "system": "Powertrain",
+    "severity": "Low"
+  },
+  {
+    "code": "P0442",
+    "description": "Evaporative Emission Control System Leak Detected (Small Leak)",
+    "system": "Powertrain",
+    "severity": "Low"
+  },
+  {
+    "code": "C0123",
+    "description": "Chassis Control System Malfunction",
+    "system": "Chassis",
+    "severity": "High"
+  }
+]
